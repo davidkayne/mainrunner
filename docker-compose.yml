@@ -5,6 +5,7 @@ services:
     build: .
     command: bash start.sh
     restart: on-failure
+    env_file: config.env
     ports:
       - "80:80"
       - "8080:8080"

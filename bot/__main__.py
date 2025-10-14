@@ -59,7 +59,7 @@ This is a personal bot intended for multifunctional use.
     else:
         await send_message(
             message,
-            "This is an anime bot.Source code is https://github.com/lostb053/anibot"
+            "You are not authorized to use this bot."
         )
 
 

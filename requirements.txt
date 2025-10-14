@@ -27,4 +27,3 @@ tgcrypto
 urllib3
 uvloop
 xattr
-requests

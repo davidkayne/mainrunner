@@ -12,20 +12,13 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import send_message, edit_message, send_file, delete_message
 
 
-async def create_zip(source_dir, output_path):
-    """Create a zip archive of the directory"""
-    await cmd_exec(f"zip -r '{output_path}' .", source_dir)
-
-
 @new_task
 async def github_clone_handler(_, message):
     msg = await send_message(message, "⏳ Processing GitHub repository...")
     
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
-        await edit_message(msg,
-            "usage: <code>/github <url></code>"
-        )
+        await edit_message(msg, "usage: <code>/github &lt;url&gt;</code>")
         return
     
     url = cmd[1].strip()
@@ -34,6 +27,7 @@ async def github_clone_handler(_, message):
     if "github.com" not in url:
         await edit_message(msg, "❌ Invalid GitHub URL!")
         return
+    
     try:
         repo_name = url.rstrip('/').split('/')[-1].replace('.git', '')
         if not repo_name:
@@ -43,8 +37,11 @@ async def github_clone_handler(_, message):
         return
     
     user_id = message.from_user.id
-    temp_dir = Path(f"downloads/{user_id}_{repo_name}")
-    zip_path = Path(f"downloads/{repo_name}.zip")
+    base_dir = Path("downloads").resolve()
+    base_dir.mkdir(parents=True, exist_ok=True)
+    
+    temp_dir = base_dir / f"{user_id}_{repo_name}"
+    zip_path = base_dir / f"{repo_name}.zip"
     
     try:
         if temp_dir.exists():
@@ -73,7 +70,7 @@ async def github_clone_handler(_, message):
             shutil.rmtree(git_dir)
         
         await edit_message(msg, f"📦 Creating archive: <code>{repo_name}.zip</code>...")    
-        shutil.make_archive(str(zip_path.with_suffix('')), 'zip', temp_dir)
+        shutil.make_archive(str(zip_path.with_suffix('')), 'zip', str(temp_dir))
         
         if not zip_path.exists():
             await edit_message(msg, "❌ Failed to create zip archive!")
@@ -82,16 +79,8 @@ async def github_clone_handler(_, message):
         file_size = zip_path.stat().st_size
         size_mb = file_size / (1024 * 1024)
         
-        if file_size > 2 * 1024 * 1024 * 1024:
-            await edit_message(
-                msg,
-                f"❌ Archive too large ({size_mb:.2f} MB)!\n"
-                "Telegram bot limit is 2GB."
-            )
-            return
-        
         await edit_message(msg, f"📤 Uploading <code>{repo_name}.zip</code> ({size_mb:.2f} MB)...")
-        await send_file(message, zip_path, caption=f"📦 <b>{repo_name}</b>")
+        await send_file(message, zip_path, caption=f"📦 <b>{repo_name}</b>\n💾 Size: {size_mb:.2f} MB")
         await delete_message(msg)
         
     except asyncio.TimeoutError:
@@ -112,6 +101,6 @@ async def github_clone_handler(_, message):
 bot.add_handler(
     MessageHandler(
         github_clone_handler,
-        filters=commd("github") & CustomFilters.authorized
+        filters=command("github") & CustomFilters.authorized
     )
 )

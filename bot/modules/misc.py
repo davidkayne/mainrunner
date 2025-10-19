@@ -9,7 +9,7 @@ from bot import LOGGER, bot
 from bot.helper.ext_utils.bot_utils import new_task, cmd_exec
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import send_message, edit_message, send_file
+from bot.helper.telegram_helper.message_utils import send_message, edit_message, send_file, delete_message
 
 
 async def create_zip(source_dir, output_path):
@@ -112,6 +112,6 @@ async def github_clone_handler(_, message):
 bot.add_handler(
     MessageHandler(
         github_clone_handler,
-        filters=command(BotCommands.GitHubCommand) & CustomFilters.owner
+        filters=commd("github") & CustomFilters.authorized
     )
 )
